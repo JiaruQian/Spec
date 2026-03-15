@@ -44,7 +44,7 @@ docker run -dit --name autospec \
   autospec:dev
 
 # If you pulled published image instead:
-docker run -dit --name autospec \
+docker run -dit --name Spec \
   --platform linux/amd64 \
   -v "$(pwd)":/workspace \
   -p 8000:8000 \
@@ -209,6 +209,10 @@ Below is a side-by-side comparison on **`benchmarks/frama-c-problems/test-inputs
 > opam init
 > eval $(opam env)
 > ```
+>
+> AutoSpec now includes compatibility fallback for older Frama-C releases (e.g. 26.x):
+> if `-generated-spec-custom terminates:skip` is unsupported, verification is retried
+> automatically without that option.
 
 Verify a single file (ground truth or your own C file):
 
@@ -283,7 +287,7 @@ int array_max(int *arr, int n) {
 Edit `autospec/config.py` to customize:
 
 - `FRAMA_C_COMMAND`: Path to Frama-C executable
-- `FRAMA_C_TIMEOUT`: Overall verification timeout (default: 60s)
+- `FRAMA_C_TIMEOUT`: Overall verification timeout (default: 10s)
 - `FRAMA_C_WP_TIMEOUT`: Per-proof timeout (default: 10s)
 - `LOG_LEVEL`: Logging verbosity
 

@@ -4,7 +4,11 @@ import re
 from pathlib import Path
 from typing import Optional, List
 from .verdict import Verdict, VerdictType
-from ..config import FRAMA_C_COMMAND, FRAMA_C_TIMEOUT, FRAMA_C_WP_TIMEOUT
+from ..config import (
+    FRAMA_C_COMMAND,
+    FRAMA_C_TIMEOUT,
+    FRAMA_C_WP_TIMEOUT,
+)
 
 
 class FramaCVerifier:
@@ -23,25 +27,14 @@ class FramaCVerifier:
             )
         
         try:
-            # Run Frama-C with WP plugin
-            # Note: We don't require termination proofs since benchmarks may not include loop variants
-            cmd = [
-                self.frama_c_cmd,
-                "-generated-spec-custom", "terminates:skip",
-                "-wp",
-                f"-wp-timeout={FRAMA_C_WP_TIMEOUT}",
-                "-wp-prover=alt-ergo",
-                # "-warn-unsigned-overflow",  # Warn about potential overflows
-                str(c_file)
-            ]
-            
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=self.timeout
+            # Run Frama-C with WP plugin. Newer Frama-C versions support
+            # `-generated-spec-custom terminates:skip`; older versions (e.g. 26.x)
+            # do not. Try with the flag first, then transparently retry without it.
+            result = self._run_frama_c(
+                c_file,
+                wp_timeout=FRAMA_C_WP_TIMEOUT,
+                run_timeout=self.timeout,
             )
-            
             return self._parse_output(result.stdout, result.stderr, result.returncode)
             
         except subprocess.TimeoutExpired:
@@ -59,6 +52,47 @@ class FramaCVerifier:
                 verdict_type=VerdictType.UNKNOWN,
                 message=f"Verification error: {str(e)}"
             )
+
+    def _build_cmd(
+        self,
+        c_file: Path,
+        wp_timeout: int,
+        include_terminates_skip: bool = True
+    ) -> List[str]:
+        """Build Frama-C command line."""
+        cmd = [self.frama_c_cmd]
+        if include_terminates_skip:
+            cmd.extend(["-generated-spec-custom", "terminates:skip"])
+        cmd.extend([
+            "-wp",
+            f"-wp-timeout={wp_timeout}",
+            "-wp-prover=alt-ergo",
+            str(c_file),
+        ])
+        return cmd
+
+    def _run_frama_c(
+        self,
+        c_file: Path,
+        wp_timeout: int,
+        run_timeout: int
+    ) -> subprocess.CompletedProcess:
+        """Run Frama-C and retry without unsupported flags if needed."""
+        first_result = subprocess.run(
+            self._build_cmd(c_file, wp_timeout=wp_timeout, include_terminates_skip=True),
+            capture_output=True,
+            text=True,
+            timeout=run_timeout
+        )
+        combined = f"{first_result.stdout}\n{first_result.stderr}".lower()
+        if "generated-spec-custom" in combined and "unknown" in combined:
+            return subprocess.run(
+                self._build_cmd(c_file, wp_timeout=wp_timeout, include_terminates_skip=False),
+                capture_output=True,
+                text=True,
+                timeout=run_timeout
+            )
+        return first_result
     
     def _parse_output(self, stdout: str, stderr: str, returncode: int) -> Verdict:
         """Parse Frama-C output to determine verdict"""
