@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Iteratively generate ACSL specifications using a vLLM (OpenAI-compatible) endpoint.
+Iteratively generate ACSL specifications using an OpenAI-compatible endpoint
+(for example OpenRouter or local vLLM).
 
 Workflow:
 1) Decompose each C file into a bottom-up sequence of functions/loops (ExtendedCallGraphBuilder).
@@ -134,10 +135,23 @@ def build_correction_prompt(file_text: str, verify_output: str) -> str:
     )
 
 
-def call_llm(prompt: str, endpoint: str, model: str, temperature: float, max_tokens: int, api_key: Optional[str]) -> str:
+def call_llm(
+    prompt: str,
+    endpoint: str,
+    model: str,
+    temperature: float,
+    max_tokens: int,
+    api_key: Optional[str],
+    site_url: Optional[str],
+    app_name: Optional[str],
+) -> str:
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
+    if site_url:
+        headers["HTTP-Referer"] = site_url
+    if app_name:
+        headers["X-Title"] = app_name
 
     payload = {
         "model": model,
@@ -219,7 +233,6 @@ def strip_think_wrappers(text: str) -> str:
 
 def annotate_file(path: Path, args) -> Path:
     src = path.read_text()
-    api_key = os.getenv("OPENAI_API_KEY")
 
     while True:
         builder = ExtendedCallGraphBuilder(src, start_line=None, filename=str(path))
@@ -236,7 +249,16 @@ def annotate_file(path: Path, args) -> Path:
 
         marked = builder.annotate_node(target)
         prompt = build_prompt(marked)
-        llm_raw = call_llm(prompt, args.endpoint, args.model, args.temperature, args.max_tokens, api_key)
+        llm_raw = call_llm(
+            prompt,
+            args.endpoint,
+            args.model,
+            args.temperature,
+            args.max_tokens,
+            args.api_key_resolved,
+            args.site_url,
+            args.app_name,
+        )
         spec_block = extract_spec_block(llm_raw)
         if not spec_block:
             # Skip this node (and thus this file) if the LLM did not produce a usable spec.
@@ -308,7 +330,6 @@ def attempt_corrections(out_path: Path, verify_output: str, args) -> bool:
     Try to repair ACSL specs using the correction prompt. Returns True if verification
     eventually succeeds, False otherwise.
     """
-    api_key = os.getenv("OPENAI_API_KEY")
     current_src = out_path.read_text()
 
     for attempt in range(1, MAX_CORRECTION_ATTEMPTS + 1):
@@ -317,7 +338,16 @@ def attempt_corrections(out_path: Path, verify_output: str, args) -> bool:
         # Log full prompt and inputs for diagnostics.
         print("[DEBUG] Correction prompt (full):")
         print(corr_prompt)
-        corr_raw = call_llm(corr_prompt, args.endpoint, args.model, args.temperature, args.max_tokens, api_key)
+        corr_raw = call_llm(
+            corr_prompt,
+            args.endpoint,
+            args.model,
+            args.temperature,
+            args.max_tokens,
+            args.api_key_resolved,
+            args.site_url,
+            args.app_name,
+        )
         print("[DEBUG] Correction LLM raw output:")
         print(corr_raw)
         corrected = extract_corrected_code(corr_raw)
@@ -348,16 +378,43 @@ def main():
     # Set up OPAM environment early to ensure frama-c is available
     setup_opam_environment()
     
-    parser = argparse.ArgumentParser(description="Generate ACSL specs via vLLM (OpenAI-compatible).")
+    parser = argparse.ArgumentParser(
+        description="Generate ACSL specs via an OpenAI-compatible endpoint (OpenRouter/vLLM)."
+    )
     parser.add_argument("--input-dir", type=Path, default=Path("benchmarks/frama-c-problems/test-inputs/arrays_and_loops"))
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/annotated"))
-    parser.add_argument("--endpoint", type=str, default="http://localhost:8000/v1/chat/completions")
-    parser.add_argument("--model", type=str, default="Qwen/Qwen3-32B")
+    parser.add_argument("--endpoint", type=str, default="https://openrouter.ai/api/v1/chat/completions")
+    parser.add_argument("--model", type=str, default="deepseek/deepseek-v3.2")
+    parser.add_argument("--api-key", type=str, default=None, help="API key override. If unset, read from --api-key-env.")
+    parser.add_argument(
+        "--api-key-env",
+        type=str,
+        default="OPENROUTER_API_KEY",
+        help="Environment variable name that stores the API key (default: OPENROUTER_API_KEY).",
+    )
+    parser.add_argument(
+        "--site-url",
+        type=str,
+        default=os.getenv("OPENROUTER_SITE_URL"),
+        help="Optional HTTP-Referer value (recommended by OpenRouter).",
+    )
+    parser.add_argument(
+        "--app-name",
+        type=str,
+        default=os.getenv("OPENROUTER_APP_NAME", "AutoSpec"),
+        help="Optional X-Title header value (recommended by OpenRouter).",
+    )
     parser.add_argument("--temperature", type=float, default=0.2)
     parser.add_argument("--max-tokens", type=int, default=512)
     parser.add_argument("--verify", action="store_true", help="Run autospec verify after annotation.")
     parser.add_argument("--verify-timeout", type=int, default=120, help="Timeout for verification (seconds).")
     args = parser.parse_args()
+
+    args.api_key_resolved = args.api_key or os.getenv(args.api_key_env) or os.getenv("OPENAI_API_KEY")
+    if "openrouter.ai" in args.endpoint and not args.api_key_resolved:
+        raise SystemExit(
+            f"Missing API key for OpenRouter. Set {args.api_key_env} or pass --api-key."
+        )
 
     files = discover_c_files(args.input_dir)
     if not files:

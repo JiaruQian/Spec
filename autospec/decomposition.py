@@ -1,7 +1,15 @@
 import clang.cindex
+import glob
 import os
 from collections import deque
 from typing import List, Optional, Tuple
+
+# Allow older libclang to work with newer Python bindings when possible.
+# We only need a subset of APIs for AST traversal in this project.
+try:
+    clang.cindex.Config.set_compatibility_check(False)
+except Exception:
+    pass
 
 
 def _find_clang_library():
@@ -11,6 +19,8 @@ def _find_clang_library():
     """
     # Common paths to try (in order of preference)
     common_paths = [
+        '/opt/clang/lib/libclang.so',
+        '/opt/clang/lib/libclang.so.12',
         '/usr/lib/llvm-14/lib/libclang.so',
         '/usr/lib/llvm-18/lib/libclang.so',
         '/usr/lib/llvm-16/lib/libclang.so',
@@ -43,6 +53,30 @@ def _find_clang_library():
     # If no path found, let clang try to find it automatically
     # This will use the default search mechanism
     pass
+
+
+def _build_clang_parse_args() -> List[str]:
+    """Build parse args so libclang can find standard C headers in containers."""
+    args = ["-std=c11"]
+
+    include_dirs = [
+        "/usr/include",
+        "/usr/local/include",
+        "/usr/include/x86_64-linux-gnu",
+        "/usr/lib/gcc/x86_64-linux-gnu/11/include",
+    ]
+    include_dirs.extend(glob.glob("/opt/clang/lib/clang/*/include"))
+    include_dirs.extend(glob.glob("/usr/lib/clang/*/include"))
+    include_dirs.extend(glob.glob("/usr/lib/llvm-*/lib/clang/*/include"))
+
+    seen = set()
+    for inc in include_dirs:
+        if inc in seen or not os.path.isdir(inc):
+            continue
+        seen.add(inc)
+        args.extend(["-isystem", inc])
+
+    return args
 
 
 # Configure clang path if necessary.
@@ -97,7 +131,7 @@ class ExtendedCallGraphBuilder:
 
         self.tu = self.index.parse(
             self.filename,
-            args=["-std=c11"],
+            args=_build_clang_parse_args(),
             unsaved_files=[(self.filename, self.source_code)],
         )
 

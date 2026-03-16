@@ -66,13 +66,40 @@ docker exec -it autospec /bin/bash
 
 This will run verification on benchmarks in `benchmarks/frama-c-problems/ground-truth` to verify that Frama-C and AutoSpec are working correctly.
 
-## Automated Spec Generation with vLLM
+## Automated Spec Generation (OpenRouter or vLLM)
 
 This is the core end-to-end workflow: **LLM → insert ACSL → verify**.
 
-### 1) Start an OpenAI-compatible vLLM server
+### 1) Use OpenRouter (recommended)
 
-In a terminal **inside Docker** (or on the host if you prefer), start the model server:
+Set credentials in a terminal inside Docker:
+
+```bash
+export OPENROUTER_API_KEY=sk-or-xxxx
+# Optional headers recommended by OpenRouter:
+export OPENROUTER_SITE_URL=https://your-site.example
+export OPENROUTER_APP_NAME=AutoSpec
+```
+
+Run generation + verification using the helper script:
+
+```bash
+./scripts/run_openrouter_gen.sh
+```
+
+You can override model and other options inline:
+
+```bash
+MODEL=anthropic/claude-3.5-sonnet \
+INPUT_DIR=benchmarks/frama-c-problems/test-inputs \
+OUTPUT_DIR=outputs/annotated-openrouter \
+VERIFY_TIMEOUT=120 \
+./scripts/run_openrouter_gen.sh
+```
+
+### 2) (Optional) Use local vLLM instead of OpenRouter
+
+Start a local OpenAI-compatible server:
 
 ```bash
 python3 -m vllm.entrypoints.openai.api_server \
@@ -81,26 +108,25 @@ python3 -m vllm.entrypoints.openai.api_server \
   --dtype auto
 ```
 
-> [!NOTE]
-> - On macOS, vLLM usually runs CPU-only in Docker and can be very slow for large models.
-> - If you run vLLM on Linux + NVIDIA GPU, start the container with `--gpus all`.
-> - `scripts/gen_specs.py` talks to an OpenAI-compatible Chat Completions endpoint.
-> - If your endpoint requires auth, set `OPENAI_API_KEY` (it will be sent as a Bearer token).
-
-### 2) Run generation (and verify)
-
-In a second terminal **inside Docker**:
+Then call `gen_specs.py` directly:
 
 ```bash
-python3 scripts/gen_specs.py \
+PYTHONPATH=. python3 scripts/gen_specs.py \
   --input-dir benchmarks/frama-c-problems/test-inputs \
   --output-dir outputs/annotated \
   --model Qwen/Qwen3-32B \
   --endpoint http://localhost:8000/v1/chat/completions \
+  --api-key-env OPENAI_API_KEY \
   --verify
 ```
 
-Key details:
+> [!NOTE]
+> - On macOS, local vLLM in Docker is often CPU-only and can be slow.
+> - If your endpoint requires auth, set the matching key env var:
+>   - OpenRouter: `OPENROUTER_API_KEY`
+>   - Other OpenAI-compatible providers: use `--api-key-env YOUR_ENV_NAME`
+
+Key details for generation:
 - The script recursively processes all `.c` files under `--input-dir`.
 - It annotates one function/loop at a time by inserting a returned `/*@ ... */` block immediately before the target node.
 - With `--verify`, it calls the AutoSpec verifier on each produced file.
@@ -111,7 +137,7 @@ Key details:
 After generation, you can verify (or re-verify) everything under an output directory:
 
 ```bash
-./scripts/run_frama_c_problems.sh -d outputs/annotated #(add -v to get verbose outputs)
+./scripts/run_frama_c_problems.sh -d outputs/annotated-openrouter #(add -v to get verbose outputs)
 ```
 
 ## Results
