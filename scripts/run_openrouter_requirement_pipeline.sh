@@ -43,13 +43,16 @@ OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}"
 export OPENROUTER_API_KEY
 
 REQUIREMENTS_FILE="${REQUIREMENTS_FILE:-benchmarks/frama-c-problems/requirements/requirements_51.json}"
-OUTPUT_DIR="${OUTPUT_DIR:-outputs/req2code-openrouter}"
+OUTPUT_DIR="${OUTPUT_DIR:-outputs/req2code-openrouter-enhanced-0324}"
 VERIFY_TIMEOUT="${VERIFY_TIMEOUT:-120}"
 REQUEST_TIMEOUT="${REQUEST_TIMEOUT:-120}"
 TEMPERATURE="${TEMPERATURE:-0.1}"
 MAX_TOKENS="${MAX_TOKENS:-2048}"
 SKIP_VERIFY="${SKIP_VERIFY:-false}" # true/false
 TASK_ID="${TASK_ID:-}"              # optional single task id
+PIPELINE_VARIANT="${PIPELINE_VARIANT:-enhanced}" # base/enhanced
+SPEC_SELF_CHECK_ROUNDS="${SPEC_SELF_CHECK_ROUNDS:-1}"
+CODE_REPAIR_MAX_ITER="${CODE_REPAIR_MAX_ITER:-3}"
 
 if [[ -z "$OPENROUTER_API_KEY" ]]; then
   echo "ERROR: OPENROUTER_API_KEY is not set."
@@ -70,6 +73,7 @@ CMD=(
   --max-tokens "$MAX_TOKENS"
   --request-timeout "$REQUEST_TIMEOUT"
   --verify-timeout "$VERIFY_TIMEOUT"
+  --pipeline-variant "$PIPELINE_VARIANT"
 )
 
 if [[ "${SKIP_VERIFY,,}" == "true" ]]; then
@@ -80,10 +84,16 @@ if [[ -n "$TASK_ID" ]]; then
   CMD+=(--task-id "$TASK_ID")
 fi
 
+if [[ "$PIPELINE_VARIANT" == "enhanced" ]]; then
+  CMD+=(--spec-self-check-rounds "$SPEC_SELF_CHECK_ROUNDS")
+  CMD+=(--code-repair-max-iter "$CODE_REPAIR_MAX_ITER")
+fi
+
 echo "[INFO] Running requirement pipeline with OpenRouter..."
 echo "[INFO] REQUIREMENTS_FILE=$REQUIREMENTS_FILE"
 echo "[INFO] OUTPUT_DIR=$OUTPUT_DIR"
 echo "[INFO] MODEL=$MODEL"
+echo "[INFO] PIPELINE_VARIANT=$PIPELINE_VARIANT"
 echo "[INFO] SKIP_VERIFY=$SKIP_VERIFY"
 if [[ -n "$TASK_ID" ]]; then
   echo "[INFO] TASK_ID=$TASK_ID"

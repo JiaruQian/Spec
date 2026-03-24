@@ -14,7 +14,11 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from autospec.llm.openai_compatible import ChatConfig, OpenAICompatibleClient
-from autospec.pipeline.requirement_pipeline import RequirementToCodePipeline, load_requirements
+from autospec.pipeline.requirement_pipeline import (
+    EnhancedRequirementToCodePipeline,
+    RequirementToCodePipeline,
+    load_requirements,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -84,6 +88,24 @@ def parse_args() -> argparse.Namespace:
         help="Generate specs/code only, skip Frama-C verification.",
     )
     parser.add_argument(
+        "--pipeline-variant",
+        choices=["base", "enhanced"],
+        default="base",
+        help="Pipeline variant for ablation: base or enhanced.",
+    )
+    parser.add_argument(
+        "--spec-self-check-rounds",
+        type=int,
+        default=1,
+        help="Enhanced only: rounds for spec self-check/refinement.",
+    )
+    parser.add_argument(
+        "--code-repair-max-iter",
+        type=int,
+        default=3,
+        help="Enhanced only: max verification-guided code repair iterations.",
+    )
+    parser.add_argument(
         "--task-id",
         type=int,
         default=None,
@@ -118,19 +140,31 @@ def main() -> None:
         timeout_seconds=args.request_timeout,
     )
     client = OpenAICompatibleClient(llm_config)
-    pipeline = RequirementToCodePipeline(
-        llm_client=client,
-        output_dir=args.output_dir,
-        verify_timeout=args.verify_timeout,
-        skip_verify=args.skip_verify,
-        logger=lambda msg: print(msg, flush=True),
-    )
+    if args.pipeline_variant == "enhanced":
+        pipeline = EnhancedRequirementToCodePipeline(
+            llm_client=client,
+            output_dir=args.output_dir,
+            verify_timeout=args.verify_timeout,
+            skip_verify=args.skip_verify,
+            logger=lambda msg: print(msg, flush=True),
+            spec_self_check_rounds=args.spec_self_check_rounds,
+            code_repair_max_iter=args.code_repair_max_iter,
+        )
+    else:
+        pipeline = RequirementToCodePipeline(
+            llm_client=client,
+            output_dir=args.output_dir,
+            verify_timeout=args.verify_timeout,
+            skip_verify=args.skip_verify,
+            logger=lambda msg: print(msg, flush=True),
+        )
     outcome = pipeline.run(requirements)
     report = outcome["report"]
     print(
         "[INFO] Pipeline finished: "
         f"total={report['total']}, verified={report['verified']}, passed={report['passed']}"
     )
+    print(f"[INFO] Pipeline variant: {args.pipeline_variant}")
     print(f"[INFO] Report: {outcome['report_path']}")
     print(json.dumps(report, ensure_ascii=False, indent=2))
 

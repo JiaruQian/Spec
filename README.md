@@ -138,7 +138,7 @@ After generation, you can verify (or re-verify) everything under an output direc
 
 ```bash
 ./scripts/run_frama_c_problems.sh -d outputs/annotated-openrouter #(add -v to get verbose outputs)
-./scripts/run_frama_c_problems.sh -d outputs/req2code-openrouter/code #(add -v to get verbose outputs)
+./scripts/run_frama_c_problems.sh -d outputs/req2code-openrouter-enhanced-0324/code #(add -v to get verbose outputs)
 
 ```
 

@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import socket
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -20,6 +22,8 @@ class ChatConfig:
     site_url: Optional[str] = None
     app_name: Optional[str] = None
     timeout_seconds: int = 120
+    retry_on_connection_error: int = 3
+    retry_delay_seconds: int = 15
 
 
 class OpenAICompatibleClient:
@@ -55,16 +59,28 @@ class OpenAICompatibleClient:
             method="POST",
         )
 
-        try:
-            with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as response:
-                body = response.read().decode("utf-8")
-        except urllib.error.HTTPError as exc:
-            err_body = exc.read().decode("utf-8", errors="replace")
-            raise RuntimeError(
-                f"LLM request failed with HTTP {exc.code}: {err_body}"
-            ) from exc
-        except urllib.error.URLError as exc:
-            raise RuntimeError(f"LLM request failed: {exc}") from exc
+        retries = max(0, int(self.config.retry_on_connection_error))
+        delay = max(0, int(self.config.retry_delay_seconds))
+        last_error: Optional[Exception] = None
+
+        for attempt in range(retries + 1):
+            try:
+                with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as response:
+                    body = response.read().decode("utf-8")
+                break
+            except urllib.error.HTTPError as exc:
+                err_body = exc.read().decode("utf-8", errors="replace")
+                raise RuntimeError(
+                    f"LLM request failed with HTTP {exc.code}: {err_body}"
+                ) from exc
+            except (urllib.error.URLError, TimeoutError, socket.timeout) as exc:
+                last_error = exc
+                if attempt >= retries:
+                    raise RuntimeError(f"LLM request failed: {exc}") from exc
+                time.sleep(delay)
+        else:
+            # Defensive fallback; loop should always break or raise.
+            raise RuntimeError(f"LLM request failed: {last_error}")
 
         try:
             data = json.loads(body)
