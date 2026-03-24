@@ -1,0 +1,257 @@
+[
+  {
+    "id": 1,
+    "path": "pointers/swap.c",
+    "requirement_en": "Given pointers to two integers, swap their stored values in place."
+  },
+  {
+    "id": 2,
+    "path": "pointers/reset_1st.c",
+    "requirement_en": "Given pointers to two integers, set the first value to 0 only if the second value is nonzero, otherwise leave both unchanged."
+  },
+  {
+    "id": 3,
+    "path": "pointers/order_3.c",
+    "requirement_en": "Given pointers to three integers, reorder the values so they are in nondecreasing order."
+  },
+  {
+    "id": 4,
+    "path": "pointers/max_pointers.c",
+    "requirement_en": "Given pointers to two integers, return the larger of the two pointed values without modifying memory."
+  },
+  {
+    "id": 5,
+    "path": "pointers/incr_a_by_b.c",
+    "requirement_en": "Given pointers to integers a and b, increase a by b and return the updated value of a."
+  },
+  {
+    "id": 6,
+    "path": "pointers/div_rem.c",
+    "requirement_en": "Given unsigned x and nonzero unsigned y, store quotient and remainder of x divided by y through output pointers."
+  },
+  {
+    "id": 7,
+    "path": "pointers/add_pointers_3_vars.c",
+    "requirement_en": "Given pointers to three integers, return the sum of the three pointed values."
+  },
+  {
+    "id": 8,
+    "path": "pointers/add_pointers.c",
+    "requirement_en": "Given pointers to two integers, return the sum of the two pointed values."
+  },
+  {
+    "id": 9,
+    "path": "mutable_arrays/bubble_sort.c",
+    "requirement_en": "Given an integer array and its length, sort the array in nondecreasing order in place."
+  },
+  {
+    "id": 10,
+    "path": "mutable_arrays/array_double.c",
+    "requirement_en": "Given an integer array and its length, replace each element with double its original value."
+  },
+  {
+    "id": 11,
+    "path": "more_arrays/reverse_array.c",
+    "requirement_en": "Given an integer array and its length, reverse the element order in place."
+  },
+  {
+    "id": 12,
+    "path": "more_arrays/replace_evens.c",
+    "requirement_en": "Given an integer array and its length, set elements at even indices to 0 and leave odd indices unchanged."
+  },
+  {
+    "id": 13,
+    "path": "more_arrays/equal_arrays.c",
+    "requirement_en": "Given two integer arrays and a length, return 1 if all compared elements are equal, otherwise return 0."
+  },
+  {
+    "id": 14,
+    "path": "miscellaneous/max_of_2.c",
+    "requirement_en": "Given two integers, return the larger value."
+  },
+  {
+    "id": 15,
+    "path": "miscellaneous/increment_arr.c",
+    "requirement_en": "Given an integer array, its length, and a constant c, add c to every array element in place."
+  },
+  {
+    "id": 16,
+    "path": "miscellaneous/array_swap.c",
+    "requirement_en": "Given an integer array and two valid indices, swap the elements at those indices."
+  },
+  {
+    "id": 17,
+    "path": "miscellaneous/array_max_advanced.c",
+    "requirement_en": "Given a nonempty integer array and its length, return the maximum element."
+  },
+  {
+    "id": 18,
+    "path": "miscellaneous/array_find.c",
+    "requirement_en": "Given an integer array, its length, and a target value, return the first index of the target or -1 if absent."
+  },
+  {
+    "id": 19,
+    "path": "loops/sum_even.c",
+    "requirement_en": "Given a nonnegative integer n, return the sum of all even numbers from 0 to n inclusive."
+  },
+  {
+    "id": 20,
+    "path": "loops/sum_digits.c",
+    "requirement_en": "Given a nonnegative integer, return the sum of its decimal digits."
+  },
+  {
+    "id": 21,
+    "path": "loops/mult.c",
+    "requirement_en": "Given integers a and b with a nonnegative, return their product using repeated addition."
+  },
+  {
+    "id": 22,
+    "path": "loops/fact.c",
+    "requirement_en": "Given a nonnegative integer n, return n factorial."
+  },
+  {
+    "id": 23,
+    "path": "loops/4.c",
+    "requirement_en": "Given a nonnegative integer n, return the sum of powers of two from 2^0 through 2^n."
+  },
+  {
+    "id": 24,
+    "path": "loops/3.c",
+    "requirement_en": "Given a positive integer c, return c by counting loop iterations while decrementing from c to 0."
+  },
+  {
+    "id": 25,
+    "path": "loops/2.c",
+    "requirement_en": "Given a nonnegative integer n, return the arithmetic sum of integers from 0 to n inclusive."
+  },
+  {
+    "id": 26,
+    "path": "loops/1.c",
+    "requirement_en": "Run a loop that increments a counter from 0 until it reaches 30, yielding final value 30."
+  },
+  {
+    "id": 27,
+    "path": "immutable_arrays/search_2.c",
+    "requirement_en": "Given an integer array, target value, and length, return 1 if the target exists in the array, else 0."
+  },
+  {
+    "id": 28,
+    "path": "immutable_arrays/search.c",
+    "requirement_en": "Given an integer array, target value, and length, perform linear search and return 1 if found, otherwise 0."
+  },
+  {
+    "id": 29,
+    "path": "immutable_arrays/sample.c",
+    "requirement_en": "Given nonnegative x and positive y, return the integer quotient of x divided by y using repeated subtraction."
+  },
+  {
+    "id": 30,
+    "path": "immutable_arrays/occurences_of_x.c",
+    "requirement_en": "Given an array, length, and value x, return the number of occurrences of x and output their total sum through a pointer."
+  },
+  {
+    "id": 31,
+    "path": "immutable_arrays/max.c",
+    "requirement_en": "Given a nonempty integer array and length, return the maximum array value."
+  },
+  {
+    "id": 32,
+    "path": "immutable_arrays/check_evens_in_array.c",
+    "requirement_en": "Given an integer array and length, return 1 if every element is even, otherwise return 0."
+  },
+  {
+    "id": 33,
+    "path": "immutable_arrays/binary_search.c",
+    "requirement_en": "Given a sorted integer array, target value, and length, return the target index via binary search or -1 if not found."
+  },
+  {
+    "id": 34,
+    "path": "immutable_arrays/array_sum.c",
+    "requirement_en": "Given an integer array and length, return the sum of its elements."
+  },
+  {
+    "id": 35,
+    "path": "general_wp_problems/wp1.c",
+    "requirement_en": "Given integers x and y, adjust y by +10 and x by -5, then return their sum."
+  },
+  {
+    "id": 36,
+    "path": "general_wp_problems/triangle_sides.c",
+    "requirement_en": "Given three side lengths, return 1 if they satisfy triangle inequality, else return 0."
+  },
+  {
+    "id": 37,
+    "path": "general_wp_problems/triangle_angles.c",
+    "requirement_en": "Given three angles, return 1 if all are positive and sum to 180, otherwise return 0."
+  },
+  {
+    "id": 38,
+    "path": "general_wp_problems/swap.c",
+    "requirement_en": "Given pointers to two integers, swap their values."
+  },
+  {
+    "id": 39,
+    "path": "general_wp_problems/simple_interest.c",
+    "requirement_en": "Given principal, time, and rate, return simple interest computed as p*n*r/100."
+  },
+  {
+    "id": 40,
+    "path": "general_wp_problems/power.c",
+    "requirement_en": "Given integer x and nonnegative exponent n, return x raised to the power n."
+  },
+  {
+    "id": 41,
+    "path": "general_wp_problems/max_of_2.c",
+    "requirement_en": "Given two integers, return the greater one (or either when equal)."
+  },
+  {
+    "id": 42,
+    "path": "general_wp_problems/gcd.c",
+    "requirement_en": "Given two nonnegative integers, return their greatest common divisor."
+  },
+  {
+    "id": 43,
+    "path": "general_wp_problems/diff.c",
+    "requirement_en": "Given integers x and y, return the difference x minus y."
+  },
+  {
+    "id": 44,
+    "path": "general_wp_problems/ani.c",
+    "requirement_en": "Given integer n, return 1 plus the count of terms in the sequence 7,10,13,... that are less than or equal to n."
+  },
+  {
+    "id": 45,
+    "path": "general_wp_problems/add.c",
+    "requirement_en": "Given two integers, return their sum."
+  },
+  {
+    "id": 46,
+    "path": "general_wp_problems/absolute_value.c",
+    "requirement_en": "Given an integer, return its absolute value."
+  },
+  {
+    "id": 47,
+    "path": "arrays_and_loops/5.c",
+    "requirement_en": "Given x, y, and an output pointer r with y positive, return quotient and store remainder such that x = quotient*y + remainder and remainder < y."
+  },
+  {
+    "id": 48,
+    "path": "arrays_and_loops/4.c",
+    "requirement_en": "Given a nonnegative integer x, return x by decrementing a counter to zero and counting iterations."
+  },
+  {
+    "id": 49,
+    "path": "arrays_and_loops/3.c",
+    "requirement_en": "Given a nonzero integer selector a, choose fixed values and return 10 divided by their sum (which evaluates to 1 for nonzero a)."
+  },
+  {
+    "id": 50,
+    "path": "arrays_and_loops/2.c",
+    "requirement_en": "Given a nonempty integer array and its length, return the maximum element."
+  },
+  {
+    "id": 51,
+    "path": "arrays_and_loops/1.c",
+    "requirement_en": "Given base and height, return the integer area of a triangle computed as base*height/2."
+  }
+]

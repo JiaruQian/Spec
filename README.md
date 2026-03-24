@@ -138,7 +138,39 @@ After generation, you can verify (or re-verify) everything under an output direc
 
 ```bash
 ./scripts/run_frama_c_problems.sh -d outputs/annotated-openrouter #(add -v to get verbose outputs)
+./scripts/run_frama_c_problems.sh -d outputs/req2code-openrouter/code #(add -v to get verbose outputs)
+
 ```
+
+## Requirement → Spec → Code Pipeline (new, minimal V1)
+
+This pipeline supports a more realistic setup:
+**natural-language requirement → ACSL generation → C code generation → Frama-C verification**.
+
+Input dataset (51 requirements aligned with `test-inputs`):
+- `benchmarks/frama-c-problems/requirements/requirements_51.json`
+
+Run:
+
+```bash
+export OPENROUTER_API_KEY=sk-or-xxxx
+
+PYTHONPATH=. python3 scripts/run_requirement_pipeline.py \
+  --requirements-file benchmarks/frama-c-problems/requirements/requirements_51.json \
+  --output-dir outputs/req2code \
+  --endpoint https://openrouter.ai/api/v1/chat/completions \
+  --model deepseek/deepseek-v3.2 \
+  --api-key-env OPENROUTER_API_KEY \
+  --verify-timeout 120
+```
+
+Output layout:
+- `outputs/req2code/specs/...` (LLM-generated spec artifacts)
+- `outputs/req2code/code/...` (LLM-generated C+ACSL files)
+- `outputs/req2code/reports/results.json` (batch summary)
+
+Design and limitations are documented in:
+- `docs/requirement_to_code_pipeline.md`
 
 ## Results
 
